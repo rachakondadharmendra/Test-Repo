@@ -17,3 +17,4 @@ COPY --from=BUILDER --chown=nextjs:nextjs /app/public ./public
 USER nextjs
 EXPOSE 3000 
 CMD ["npm", "start"]
+

@@ -1,0 +1,109 @@
+version: "3.5"
+
+services:
+  db:
+    image: mariadb:10.11
+    volumes:
+      - "db-data:/var/lib/mysql"
+    environment:
+      MYSQL_ROOT_PASSWORD: wordpress
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: wordpress
+      MYSQL_PASSWORD: wordpress
+
+  wordpress:
+    depends_on:
+      - db
+    build: ./Wordpress-repo
+    volumes:
+      - "site-data:/var/www/wp-content"
+    ports:
+      - "8123:80"
+    environment:
+      DB_HOST: db
+      DB_PASSWORD: wordpress
+      DB_NAME: wordpress
+      DB_USER: wordpress
+      WORDPRESS_SITE_URL: http://localhost:8123
+      FS_METHOD: direct
+      # For debugging only:
+      #WP_DEBUG: "true"
+      #WP_DEBUG_DISPLAY: "true"
+
+  db-mongo:
+    image: mongo
+    container_name: mongo_db
+    restart: always
+    ports:
+      - 27017:27017
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - db-network
+
+  db-client:
+    image: mongo-express
+    container_name: mongo_db_ui_mode
+    restart: always
+    ports:
+      - 8081:8081
+    environment:
+      - ME_CONFIG_MONGODB_ADMINUSERNAME=${MONGO_INITDB_ROOT_USERNAME}
+      - ME_CONFIG_MONGODB_ADMINPASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
+      - ME_CONFIG_MONGODB_URL=mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@db-mongo:27017/
+    depends_on:
+      - db-mongo
+    networks:
+      - db-network
+
+  backend:
+    build:
+      context: ./Go-lang-repo
+      dockerfile: Dockerfile
+    image: golang_compose_image:v1
+    container_name: golang_server
+    environment:
+      - MONGODB_URI=mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@db-mongo:27017/
+      - DB_NAME=${DB_NAME}
+      - MONGODB_COLLECTION_NAME=${MONGODB_COLLECTION_NAME}
+      - SERVER_PORT=${SERVER_PORT}
+      - DB_USERNAME=${MONGO_INITDB_ROOT_USERNAME}
+      - DB_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
+      - LOG_FILE_PATH=${LOG_FILE_PATH}
+    ports:
+      - "8082:8080"
+    depends_on:
+      - db-mongo
+    networks:
+      - db-network      
+
+  nextjs-app:
+    build:
+      context: ./Nextjs-repo
+      dockerfile: Dockerfile
+    image: nextjs_compose_image:v1
+    container_name: nextjs_app
+    ports:
+      - "3000:3000"
+    networks:
+      - nextjs-network
+
+volumes:
+  db-data:
+  site-data:
+  mongo-data:
+
+networks:
+  default:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 192.168.91.0/24
+  db-network: 
+  nextjs-network:
+
+

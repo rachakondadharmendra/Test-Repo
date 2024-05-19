@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API catalog</title>
+    <link rel="icon" href="https://img.icons8.com/ios-filled/50/808080/api.png" type="image/png">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.3.1/styles/atom-one-light.min.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .api-container {
+            display: grid;
+            gap: 20px;
+        }
+
+        .api {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            cursor: pointer;
+            transition: box-shadow 0.3s ease;
+        }
+
+        .api:hover {
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        .method {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #007bff;
+        }
+
+        .path {
+            margin-bottom: 10px;
+            color: #6c757d;
+        }
+
+        .heading {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #343a40;
+        }
+
+        .description,
+        .usage {
+            margin-bottom: 10px;
+            color: #343a40;
+        }
+
+        .headers,
+        .body,
+        .example {
+            margin-top: 10px;
+            border-top: 1px solid #dee2e6;
+            padding-top: 10px;
+        }
+
+        .subheading {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #6c757d;
+        }
+
+        .example-code {
+            color: #333;
+            font-size: 14px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .api-details {
+            display: none;
+        }
+
+        .api-details.active {
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="api-container">
+        {{range .}}
+        <div class="api">
+            <div class="method">{{.Method}}</div>
+            <div class="path">{{.Path}}</div>
+            <div class="api-details">
+                <div class="heading">Description:</div>
+                <div class="description">{{.Description}}</div>
+                <div class="heading">Usage:</div>
+                <div class="usage">{{.Usage}}</div>
+                <div class="headers">
+                    <div class="subheading">Headers:</div>
+                    <pre>{{range $key, $value := .Headers}}{{$key}}: {{$value}}{{"\n"}}{{end}}</pre>
+                </div>
+                {{if ne .Body ""}}
+                <div class="body">
+                    <div class="subheading">Body:</div>
+                    <pre><code>{{.Body}}</code></pre>
+                </div>
+                {{end}}
+                <div class="example">
+                    <div class="subheading">Example:</div>
+                    <div class="example-code"><pre><code>{{.Example}}</code></pre></div>
+                </div>
+            </div>
+        </div>
+        {{end}}
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const apis = document.querySelectorAll(".api");
+
+            apis.forEach(api => {
+                api.addEventListener("click", function () {
+                    this.querySelector('.api-details').classList.toggle('active');
+                });
+            });
+        });
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.3.1/highlight.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            hljs.highlightAll();
+        });
+    </script>
+</body>
+
+</html>
